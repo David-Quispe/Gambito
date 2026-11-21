@@ -43,6 +43,14 @@ class ProductoAdmin(admin.ModelAdmin):
     search_fields = ('nombre',)
     list_editable = ('precio', 'descuento', 'stock')
     ordering = ('stock', 'nombre')  # primero lo que se está acabando
+    fieldsets = (
+        (None, {'fields': ('nombre', 'descripcion', 'categoria', 'tipo', 'precio', 'descuento', 'stock', 'ventas', 'imagen')}),
+        ('Datos del juego', {'fields': ('jugadores', 'duracion', 'edad', 'dificultad')}),
+        ('Información ampliada', {
+            'fields': ('componentes', 'preparacion', 'como_jugar', 'como_ganar', 'consejos', 'video'),
+            'description': 'Se muestra al pulsar "Ver juego". En los textos, escribe una línea por paso.',
+        }),
+    )
     actions = ['reponer_10', 'reponer_50', 'quitar_descuento']
 
     @admin.display(description='estado')

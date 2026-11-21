@@ -17,6 +17,12 @@ TIPOS = [
     ('dado', 'Dados'),
 ]
 
+DIFICULTADES = [
+    ('facil', 'Fácil'),
+    ('media', 'Media'),
+    ('dificil', 'Difícil'),
+]
+
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=60, unique=True)
@@ -47,6 +53,17 @@ class Producto(models.Model):
     jugadores = models.CharField(max_length=20, blank=True, help_text='Ej: 3-4')
     duracion = models.CharField(max_length=20, blank=True, help_text='Ej: 60-120 (minutos)')
     edad = models.CharField(max_length=10, blank=True, help_text='Ej: +10')
+    # Información ampliada (solo juegos). En los textos largos, cada línea es un paso o un punto.
+    dificultad = models.CharField(max_length=10, choices=DIFICULTADES, blank=True)
+    componentes = models.TextField(blank=True, help_text='Qué trae la caja, una cosa por línea')
+    preparacion = models.TextField(blank=True, help_text='Cómo se arma la mesa, un paso por línea')
+    como_jugar = models.TextField(blank=True, help_text='Cómo se juega un turno, un paso por línea')
+    como_ganar = models.TextField(blank=True, help_text='Cómo termina la partida y quién gana')
+    consejos = models.TextField(blank=True, help_text='Trucos para la primera partida, uno por línea')
+    video = models.CharField(
+        max_length=200, blank=True,
+        help_text='Enlace de YouTube que explica el juego (https://www.youtube.com/watch?v=...)',
+    )
     # Marketing: porcentaje de descuento (0 = sin promoción)
     descuento = models.PositiveSmallIntegerField(
         default=0,

@@ -16,6 +16,14 @@ export interface Producto {
   edad: string
   tipo: string
   tipo_nombre: string
+  dificultad: '' | 'facil' | 'media' | 'dificil'
+  dificultad_nombre: string
+  componentes: string
+  preparacion: string
+  como_jugar: string
+  como_ganar: string
+  consejos: string
+  video_id: string
 }
 
 export type Orden = '' | 'populares' | 'precio_asc' | 'precio_desc' | 'descuento' | 'nombre'

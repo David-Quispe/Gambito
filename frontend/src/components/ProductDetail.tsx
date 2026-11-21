@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import InfoJuego from '@/components/InfoJuego'
 import MiniProducto from '@/components/MiniProducto'
 import Precio from '@/components/Precio'
 import StatBadge from '@/components/StatBadge'
@@ -129,6 +130,8 @@ function ProductDetail({ producto, onCerrar, onVer }: ProductDetailProps) {
             </div>
           </div>
         </div>
+
+        <InfoJuego producto={producto} />
 
         <div className="space-y-4 p-6">
           <h4 className="text-sm font-bold uppercase tracking-[0.25em]">
