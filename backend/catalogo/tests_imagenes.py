@@ -1,29 +1,29 @@
-import tempfile
-from unittest.mock import patch
+from pathlib import Path
 
+from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
-from .management.commands import descargar_imagenes_extras as cmd
+from .management.commands.asignar_imagenes_extras import FOTOS
 from .models import Producto
 
 
-class DescargarImagenesTests(TestCase):
+class AsignarImagenesTests(TestCase):
     def setUp(self):
         call_command('cargar_extras')
 
     def test_asigna_foto_y_no_pisa_portadas_existentes(self):
         Producto.objects.filter(nombre='Dragón rojo sin pintar').update(imagen='https://x/y.jpg')
-        with tempfile.TemporaryDirectory() as carpeta, patch.object(cmd, 'descargar', return_value=b'jpg'):
-            call_command('descargar_imagenes_extras', destino=carpeta)
+        call_command('asignar_imagenes_extras')
         dado = Producto.objects.get(nombre='Dados de seis caras (12 un.)')
-        self.assertTrue(dado.imagen.startswith('/accesorios/'))
+        self.assertEqual(dado.imagen, '/accesorios/dados-seis-caras.jpg')
         self.assertEqual(Producto.objects.get(nombre='Dragón rojo sin pintar').imagen, 'https://x/y.jpg')
 
-    def test_si_falla_la_descarga_se_queda_la_ilustracion(self):
-        with tempfile.TemporaryDirectory() as carpeta, patch.object(cmd, 'descargar', side_effect=OSError('sin red')):
-            call_command('descargar_imagenes_extras', destino=carpeta)
-        self.assertEqual(Producto.objects.get(nombre='Pincel de detalle n.º 0').imagen, '')
+    def test_todos_los_extras_tienen_foto(self):
+        call_command('asignar_imagenes_extras')
+        self.assertFalse(Producto.objects.filter(categoria__nombre='Accesorios', imagen='').exists())
 
-    def test_nombre_local_sin_tildes_ni_comas(self):
-        self.assertEqual(cmd._nombre_local('Würfel,_gemischt_--_2021_--_5577.jpg'), 'wurfel-gemischt-2021-5577.jpg')
+    def test_los_archivos_existen_en_el_frontend(self):
+        carpeta = Path(settings.BASE_DIR).parent / 'frontend' / 'public' / 'accesorios'
+        for archivo in FOTOS.values():
+            self.assertTrue((carpeta / f'{archivo}.jpg').exists(), archivo)
