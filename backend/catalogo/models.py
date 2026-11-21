@@ -34,9 +34,9 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=8, decimal_places=2)
-    imagen = models.URLField(
+    imagen = models.CharField(
         max_length=500, blank=True,
-        help_text='Enlace a la portada (si lo dejas vacío se usa una ilustración según el tipo)',
+        help_text='Enlace https://... o ruta como /accesorios/dado.jpg (vacío = ilustración según el tipo)',
     )
     stock = models.PositiveIntegerField(default=0)
     categoria = models.ForeignKey(
