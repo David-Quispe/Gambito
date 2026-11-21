@@ -2,6 +2,7 @@ import { usarRespaldo } from '@/lib/imagen'
 import StatBadge from '@/components/StatBadge'
 import { Badge } from '@/components/ui/badge'
 import BotonAgregar from '@/components/BotonAgregar'
+import BotonDeseo from '@/components/BotonDeseo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import Precio from '@/components/Precio'
@@ -50,6 +51,9 @@ function ProductCard({ producto, onVer }: ProductCardProps) {
               sinStock ? 'grayscale' : ''
             }`}
           />
+          <div className="absolute bottom-0 left-0 z-10">
+            <BotonDeseo id={producto.id} nombre={nombre} className="border-white/70 bg-black/40 text-white" />
+          </div>
           {producto.en_oferta && !sinStock && (
             <span className="absolute right-3 top-3 rotate-3 bg-hot px-3 py-1 font-display text-xl tracking-wider text-white shadow-lg">
               -{producto.descuento}%

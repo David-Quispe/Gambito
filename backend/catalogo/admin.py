@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 
-from .models import STOCK_BAJO, Categoria, ItemPedido, Pedido, Producto
+from .models import STOCK_BAJO, Categoria, Deseo, ItemPedido, Pedido, Producto
 
 
 class EstadoStockFilter(admin.SimpleListFilter):
@@ -125,3 +125,10 @@ class PedidoAdmin(admin.ModelAdmin):
     def cancelar_y_devolver_stock(self, request, queryset):
         cancelados = sum(1 for pedido in queryset if pedido.cancelar())
         self.message_user(request, f'{cancelados} pedido(s) cancelados y stock devuelto.', messages.SUCCESS)
+
+
+@admin.register(Deseo)
+class DeseoAdmin(admin.ModelAdmin):
+    list_display = ('producto', 'usuario', 'creado')
+    list_filter = ('producto__categoria',)
+    search_fields = ('producto__nombre', 'usuario__username')

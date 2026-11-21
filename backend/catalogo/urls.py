@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .cuentas import LoginView, LogoutView, RegistroView, YoView
+from .deseos import DemandaView, DeseoDetalleView, DeseosView
 from .pedidos import PedidoViewSet
 from .views import CategoriaViewSet, ProductoViewSet
 
@@ -15,4 +16,7 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view()),
     path('auth/logout/', LogoutView.as_view()),
     path('auth/yo/', YoView.as_view()),
+    path('deseos/', DeseosView.as_view()),
+    path('deseos/<int:producto_id>/', DeseoDetalleView.as_view()),
+    path('demanda/', DemandaView.as_view()),
 ] + router.urls

@@ -10,6 +10,7 @@ import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import InventarioAdmin from '@/components/InventarioAdmin'
+import MisDeseos from '@/components/MisDeseos'
 import MisPedidos from '@/components/MisPedidos'
 import ProductDetail from '@/components/ProductDetail'
 import ProductList from '@/components/ProductList'
@@ -17,6 +18,7 @@ import PromoBanner from '@/components/PromoBanner'
 import Recomendados from '@/components/Recomendados'
 import SectionTitle from '@/components/SectionTitle'
 import { useCarrito } from '@/lib/carrito'
+import { useDeseos } from '@/lib/deseos'
 import { borrarToken, leerToken } from '@/lib/sesion'
 import {
   cerrarSesion,
@@ -53,11 +55,12 @@ function App() {
   // Sesión: quién está conectado, qué ventana de cuenta está abierta y qué pantalla se ve
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [modalAuth, setModalAuth] = useState<ModoAuth | null>(null)
-  const [vista, setVista] = useState<'tienda' | 'inventario' | 'pedidos'>('tienda')
+  const [vista, setVista] = useState<'tienda' | 'inventario' | 'pedidos' | 'deseos'>('tienda')
 
   // Carrito: el estado vive en CarritoProvider, aquí solo se controlan las ventanas
   const carrito = useCarrito()
   const { sincronizar } = carrito
+  const { recargar: recargarDeseos, limpiar: limpiarDeseos } = useDeseos()
   const [carritoAbierto, setCarritoAbierto] = useState(false)
   const [pagando, setPagando] = useState(false)
   const [pagarAlEntrar, setPagarAlEntrar] = useState(false)
@@ -89,6 +92,12 @@ function App() {
       cancelado = true
     }
   }, [intento])
+
+  // Los favoritos se cargan al entrar y se vacían al salir
+  useEffect(() => {
+    if (usuario) recargarDeseos()
+    else limpiarDeseos()
+  }, [usuario, recargarDeseos, limpiarDeseos])
 
   // Cada vez que llega el catálogo se ponen al día los precios y el stock del carrito
   useEffect(() => {
@@ -193,9 +202,11 @@ function App() {
         usuario={usuario}
         enInventario={vista === 'inventario'}
         enPedidos={vista === 'pedidos'}
+        enDeseos={vista === 'deseos'}
         cantidadCarrito={carrito.cantidadTotal}
         onCarrito={() => setCarritoAbierto(true)}
         onPedidos={() => setVista('pedidos')}
+        onDeseos={() => setVista('deseos')}
         onIngresar={() => setModalAuth('ingresar')}
         onRegistrarse={() => setModalAuth('registro')}
         onSalir={salir}
@@ -204,6 +215,8 @@ function App() {
       />
 
       {vista === 'inventario' && usuario?.es_admin && <InventarioAdmin onVolver={volverALaTienda} />}
+
+      {vista === 'deseos' && usuario && <MisDeseos onVer={setDetalle} onVolver={volverALaTienda} />}
 
       {vista === 'pedidos' && usuario && <MisPedidos onVolver={volverALaTienda} />}
 

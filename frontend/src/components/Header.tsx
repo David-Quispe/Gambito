@@ -13,9 +13,11 @@ interface HeaderProps {
   usuario: Usuario | null
   enInventario: boolean
   enPedidos: boolean
+  enDeseos: boolean
   cantidadCarrito: number
   onCarrito: () => void
   onPedidos: () => void
+  onDeseos: () => void
   onIngresar: () => void
   onRegistrarse: () => void
   onSalir: () => void
@@ -27,9 +29,11 @@ function Header({
   usuario,
   enInventario,
   enPedidos,
+  enDeseos,
   cantidadCarrito,
   onCarrito,
   onPedidos,
+  onDeseos,
   onIngresar,
   onRegistrarse,
   onSalir,
@@ -42,7 +46,7 @@ function Header({
   const cerrar = () => setMenuAbierto(false)
   const botonBase = 'h-9 px-4 text-xs font-bold uppercase tracking-widest transition'
   // En Inventario y Mis pedidos se esconde el menú de la tienda
-  const enOtraVista = enInventario || enPedidos
+  const enOtraVista = enInventario || enPedidos || enDeseos
 
   const cuenta = usuario ? (
     <div className="flex flex-wrap items-center gap-2">
@@ -52,6 +56,18 @@ function Header({
           <span className="ml-2 bg-hot px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Admin</span>
         )}
       </span>
+      {!enDeseos && (
+        <button
+          type="button"
+          onClick={() => {
+            cerrar()
+            onDeseos()
+          }}
+          className={`${botonBase} border border-paper/40 text-paper hover:bg-paper/10`}
+        >
+          Favoritos
+        </button>
+      )}
       {!enPedidos && (
         <button
           type="button"

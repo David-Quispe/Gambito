@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import ReporteDemanda from '@/components/ReporteDemanda'
 import SectionTitle from '@/components/SectionTitle'
 import { ajustarStock, obtenerInventario, obtenerProductos } from '@/services/api'
 import type { Producto, ResumenInventario } from '@/types/producto'
@@ -76,6 +77,8 @@ function InventarioAdmin({ onVolver }: InventarioAdminProps) {
       >
         ◀ Volver a la tienda
       </button>
+
+      <ReporteDemanda />
 
       {cargando && <p className="py-10 text-center text-muted-foreground">Cargando inventario...</p>}
 

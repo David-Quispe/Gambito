@@ -161,3 +161,20 @@ class ItemPedido(models.Model):
     @property
     def subtotal(self):
         return self.precio_unitario * self.cantidad
+
+
+class Deseo(models.Model):
+    """Un producto guardado en la lista de deseos de una persona."""
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='deseos')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='deseos')
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado']
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'producto'], name='deseo_unico_por_usuario'),
+        ]
+
+    def __str__(self):
+        return f'{self.usuario} → {self.producto}'

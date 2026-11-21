@@ -1,6 +1,7 @@
 import { borrarToken, guardarToken, leerToken } from '@/lib/sesion'
 import type { DatosCompra, Pedido } from '@/types/pedido'
 import type { Filtros, Producto, ResumenInventario, Usuario } from '@/types/producto'
+import type { ReporteDemanda } from '@/types/deseo'
 
 // Dirección donde corre el backend de Django
 const API_URL = 'http://127.0.0.1:8000/api'
@@ -155,4 +156,26 @@ export function crearPedido(datos: DatosCompra): Promise<Pedido> {
 
 export function obtenerPedidos(): Promise<Pedido[]> {
   return pedir<Pedido[]>('/pedidos/')
+}
+
+// ---- Lista de deseos y reporte de demanda ----
+
+export function obtenerDeseos(): Promise<Producto[]> {
+  return pedir<Producto[]>('/deseos/')
+}
+
+export function agregarDeseo(producto: number): Promise<void> {
+  return pedir<void>('/deseos/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ producto }),
+  })
+}
+
+export function quitarDeseo(producto: number): Promise<void> {
+  return pedir<void>(`/deseos/${producto}/`, { method: 'DELETE' })
+}
+
+export function obtenerDemanda(): Promise<ReporteDemanda> {
+  return pedir<ReporteDemanda>('/demanda/')
 }

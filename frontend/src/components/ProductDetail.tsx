@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import BotonAgregar from '@/components/BotonAgregar'
+import BotonDeseo from '@/components/BotonDeseo'
 import InfoJuego from '@/components/InfoJuego'
 import MiniProducto from '@/components/MiniProducto'
 import Precio from '@/components/Precio'
@@ -127,6 +128,7 @@ function ProductDetail({ producto, onCerrar, onVer }: ProductDetailProps) {
                       ? `¡Últimas ${producto.stock} unidades!`
                       : `${producto.stock} disponibles`}
                 </span>
+                <BotonDeseo id={producto.id} nombre={producto.nombre} className="border-current" />
                 <BotonAgregar
                   producto={producto}
                   className="h-10 px-6"
