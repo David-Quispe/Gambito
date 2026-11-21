@@ -1,5 +1,5 @@
 // Qué juegos de la tienda se pueden jugar contra el bot (se reconocen por el nombre del producto).
-export type JuegoJugable = 'uno' | 'dobble' | 'damas'
+export type JuegoJugable = 'uno' | 'dobble' | 'damas' | 'ajedrez'
 
 export function juegoJugable(nombre: string): JuegoJugable | null {
   const n = nombre
@@ -10,6 +10,7 @@ export function juegoJugable(nombre: string): JuegoJugable | null {
   if (n === 'uno') return 'uno'
   if (n === 'dobble') return 'dobble'
   if (n === 'damas') return 'damas'
+  if (n === 'ajedrez') return 'ajedrez'
   return null
 }
 
@@ -17,6 +18,7 @@ export const TITULOS: Record<JuegoJugable, string> = {
   uno: 'Uno',
   dobble: 'Dobble',
   damas: 'Damas',
+  ajedrez: 'Ajedrez',
 }
 
 export const REGLAS: Record<JuegoJugable, string> = {
@@ -25,4 +27,6 @@ export const REGLAS: Record<JuegoJugable, string> = {
     'Entre las dos cartas hay un único símbolo igual. Tócalo antes que el bot: gana el punto quien lo encuentre primero. Si te equivocas, pierdes un momento.',
   damas:
     'Tú juegas con las blancas (abajo). Mueves en diagonal y comer es obligatorio; puedes encadenar capturas. Al llegar al otro extremo tu pieza se corona.',
+  ajedrez:
+    'Tú juegas con las blancas (abajo). Toca una pieza para ver sus jugadas. El rival es una IA; si no está disponible, juega un bot básico. Hay enroque, captura al paso y coronación.',
 }

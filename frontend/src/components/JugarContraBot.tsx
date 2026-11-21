@@ -5,6 +5,7 @@ import { juegoJugable, TITULOS } from '@/juegos/registro'
 const UnoJuego = lazy(() => import('@/juegos/UnoJuego'))
 const DobbleJuego = lazy(() => import('@/juegos/DobbleJuego'))
 const DamasJuego = lazy(() => import('@/juegos/DamasJuego'))
+const AjedrezJuego = lazy(() => import('@/juegos/AjedrezJuego'))
 
 interface JugarContraBotProps {
   nombre: string
@@ -25,7 +26,7 @@ function JugarContraBot({ nombre, style }: JugarContraBotProps) {
         style={style}
         className="h-10 border-2 border-current px-5 text-xs font-bold uppercase tracking-widest transition hover:opacity-80"
       >
-        ▶ Jugar {TITULOS[juego]} contra el bot
+        ▶ Jugar {TITULOS[juego]} contra {juego === 'ajedrez' ? 'la IA' : 'el bot'}
       </button>
       {abierto && (
         <ModalJuego juego={juego} onCerrar={() => setAbierto(false)}>
@@ -34,6 +35,7 @@ function JugarContraBot({ nombre, style }: JugarContraBotProps) {
               {juego === 'uno' && <UnoJuego key={partida} />}
               {juego === 'dobble' && <DobbleJuego key={partida} />}
               {juego === 'damas' && <DamasJuego key={partida} />}
+              {juego === 'ajedrez' && <AjedrezJuego key={partida} />}
             </Suspense>
           )}
         </ModalJuego>

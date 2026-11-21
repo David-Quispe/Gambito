@@ -64,3 +64,11 @@ class AgregarDamasTests(TestCase):
         damas = Producto.objects.get(nombre='Damas')
         self.assertEqual(damas.tipo, 'juego')
         self.assertEqual(damas.categoria.nombre, 'Clásicos')
+
+
+class AgregarAjedrezTests(TestCase):
+    def test_crea_ajedrez_una_sola_vez(self):
+        call_command('agregar_ajedrez')
+        call_command('agregar_ajedrez')
+        self.assertEqual(Producto.objects.filter(nombre='Ajedrez').count(), 1)
+        self.assertEqual(Producto.objects.get(nombre='Ajedrez').categoria.nombre, 'Clásicos')
