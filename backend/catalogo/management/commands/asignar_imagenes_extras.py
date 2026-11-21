@@ -25,13 +25,16 @@ FOTOS = {
 
 
 class Command(BaseCommand):
-    help = 'Asigna a los accesorios sus fotos de /accesorios (solo si no tienen imagen).'
+    help = (
+        'Asigna a los accesorios sus fotos de /accesorios. Rellena las vacías y corrige '
+        'rutas viejas de /accesorios/, pero no toca enlaces https puestos a mano.'
+    )
 
     def handle(self, *args, **opciones):
         asignadas = 0
         for nombre, archivo in FOTOS.items():
-            actualizados = Producto.objects.filter(nombre=nombre, imagen='').update(
-                imagen=f'/accesorios/{archivo}.jpg'
-            )
-            asignadas += actualizados
+            ruta = f'/accesorios/{archivo}.jpg'
+            candidatos = Producto.objects.filter(nombre=nombre).exclude(imagen=ruta)
+            vacios = candidatos.filter(imagen='') | candidatos.filter(imagen__startswith='/accesorios/')
+            asignadas += vacios.update(imagen=ruta)
         self.stdout.write(self.style.SUCCESS(f'Imágenes asignadas: {asignadas}'))

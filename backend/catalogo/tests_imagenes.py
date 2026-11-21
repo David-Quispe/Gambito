@@ -19,6 +19,11 @@ class AsignarImagenesTests(TestCase):
         self.assertEqual(dado.imagen, '/accesorios/dados-seis-caras.jpg')
         self.assertEqual(Producto.objects.get(nombre='Dragón rojo sin pintar').imagen, 'https://x/y.jpg')
 
+    def test_corrige_rutas_viejas_de_accesorios(self):
+        Producto.objects.filter(nombre='Pincel de detalle n.º 0').update(imagen='/accesorios/painting-brushes.jpg')
+        call_command('asignar_imagenes_extras')
+        self.assertEqual(Producto.objects.get(nombre='Pincel de detalle n.º 0').imagen, '/accesorios/pincel-detalle.jpg')
+
     def test_todos_los_extras_tienen_foto(self):
         call_command('asignar_imagenes_extras')
         self.assertFalse(Producto.objects.filter(categoria__nombre='Accesorios', imagen='').exists())
