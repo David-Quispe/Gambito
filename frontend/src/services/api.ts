@@ -194,3 +194,26 @@ export function participarEn(id: number): Promise<Novedad> {
 export function salirDe(id: number): Promise<Novedad> {
   return pedir<Novedad>(`/novedades/${id}/participar/`, { method: 'DELETE' })
 }
+
+// ---- Árbitro IA y jugadas de la IA ----
+
+export interface MensajeArbitro {
+  rol: 'usuario' | 'ia'
+  texto: string
+}
+
+export function preguntarArbitro(producto: number, pregunta: string, historial: MensajeArbitro[]): Promise<{ respuesta: string }> {
+  return pedir<{ respuesta: string }>('/arbitro/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ producto, pregunta, historial }),
+  })
+}
+
+export function pedirJugadaIA(posicion: string, legales: string[], historial: string): Promise<{ jugada: string }> {
+  return pedir<{ jugada: string }>('/ia/jugada/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ juego: 'ajedrez', posicion, legales, historial }),
+  })
+}

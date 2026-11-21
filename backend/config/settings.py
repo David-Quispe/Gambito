@@ -16,6 +16,18 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# Lee backend/.env (si existe) para claves privadas como GEMINI_API_KEY. El archivo no se sube a Git.
+import os  # noqa: E402
+
+_ENV = BASE_DIR / '.env'
+if _ENV.exists():
+    for _linea in _ENV.read_text(encoding='utf-8').splitlines():
+        _linea = _linea.strip()
+        if _linea and not _linea.startswith('#') and '=' in _linea:
+            _nombre, _valor = _linea.split('=', 1)
+            os.environ.setdefault(_nombre.strip(), _valor.strip().strip('"').strip("'"))
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
@@ -143,5 +155,5 @@ REST_FRAMEWORK = {
     # El frontend manda "Authorization: Token <clave>" después de iniciar sesión
     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication'],
     # Límite de intentos en registro e inicio de sesión (frena adivinar contraseñas)
-    'DEFAULT_THROTTLE_RATES': {'auth': '30/min'},
+    'DEFAULT_THROTTLE_RATES': {'auth': '30/min', 'ia': '40/hour'},
 }

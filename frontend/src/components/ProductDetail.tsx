@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ArbitroIA from '@/components/ArbitroIA'
 import BotonAgregar from '@/components/BotonAgregar'
 import BotonDeseo from '@/components/BotonDeseo'
 import InfoJuego from '@/components/InfoJuego'
@@ -136,8 +137,9 @@ function ProductDetail({ producto, onCerrar, onVer }: ProductDetailProps) {
                   style={{ background: tema.acento, color: tema.acentoTexto }}
                 />
               </div>
-              <div>
+              <div className="flex flex-wrap gap-3">
                 <JugarContraBot nombre={producto.nombre} style={{ color: tema.titulo }} />
+                {producto.tipo === 'juego' && <ArbitroIA idProducto={producto.id} nombre={producto.nombre} style={{ color: tema.titulo }} />}
               </div>
             </div>
           </div>
