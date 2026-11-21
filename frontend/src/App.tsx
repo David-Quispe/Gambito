@@ -28,6 +28,7 @@ const nombresDestacados = ['Root', 'Catan', 'Wingspan', 'Pandemic']
 
 const filtrosIniciales: Filtros = {
   categoria: 'Todos',
+  tipo: 'todos',
   buscar: '',
   precioMax: null,
   soloOfertas: false,

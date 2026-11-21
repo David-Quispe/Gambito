@@ -50,6 +50,8 @@ function Icono({ tipo }: { tipo: TipoDato }) {
 }
 
 function StatBadge({ tipo, valor, fondo, color }: StatBadgeProps) {
+  // Los productos que no son juegos (dados, pinturas...) no tienen este dato
+  if (!valor) return null
   return (
     <div className="flex flex-col items-center gap-2" title={titulos[tipo]}>
       <span className="font-display text-lg leading-none tracking-wide">{valor}</span>

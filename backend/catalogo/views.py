@@ -51,6 +51,10 @@ class ProductoViewSet(viewsets.ReadOnlyModelViewSet):
         if categoria and categoria != 'Todos':
             qs = qs.filter(categoria__nombre__iexact=categoria)
 
+        tipo = params.get('tipo')
+        if tipo and tipo != 'todos':
+            qs = qs.filter(tipo=tipo)
+
         buscar = (params.get('buscar') or '').strip()
         if buscar:
             qs = qs.filter(

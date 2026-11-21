@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck -- datos simulados del Lab 13: ya no se usan, la tienda lee la API
 import type { Producto } from '@/types/producto'
 
 // Datos simulados para esta primera etapa.

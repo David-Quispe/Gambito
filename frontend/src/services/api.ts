@@ -51,6 +51,7 @@ function armarParametros(filtros?: Partial<Filtros>): string {
   if (!filtros) return ''
   const p = new URLSearchParams()
   if (filtros.categoria && filtros.categoria !== 'Todos') p.set('categoria', filtros.categoria)
+  if (filtros.tipo && filtros.tipo !== 'todos') p.set('tipo', filtros.tipo)
   if (filtros.buscar?.trim()) p.set('buscar', filtros.buscar.trim())
   if (filtros.precioMax != null) p.set('precio_max', String(filtros.precioMax))
   if (filtros.soloOfertas) p.set('oferta', '1')

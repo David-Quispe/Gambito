@@ -37,9 +37,9 @@ class ProductoAdmin(admin.ModelAdmin):
     """Gestión de inventario: solo los administradores pueden cambiar el stock."""
 
     list_display = (
-        'id', 'nombre', 'categoria', 'precio', 'descuento', 'stock', 'estado_stock', 'ventas',
+        'id', 'nombre', 'tipo', 'categoria', 'precio', 'descuento', 'stock', 'estado_stock', 'ventas',
     )
-    list_filter = ('categoria', EstadoStockFilter, 'descuento')
+    list_filter = ('tipo', 'categoria', EstadoStockFilter, 'descuento')
     search_fields = ('nombre',)
     list_editable = ('precio', 'descuento', 'stock')
     ordering = ('stock', 'nombre')  # primero lo que se está acabando

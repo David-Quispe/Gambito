@@ -6,6 +6,13 @@ export interface TemaCategoria {
   acentoTexto: string
 }
 
+const temaAccesorios: TemaCategoria = {
+  fondo: 'radial-gradient(circle at 20% 0%, #7a4aa8 0%, #2c1650 75%)',
+  titulo: '#f6e7ff',
+  acento: '#e2c4ff',
+  acentoTexto: '#2c1650',
+}
+
 const temas: Record<string, TemaCategoria> = {
   Estrategia: {
     fondo: 'radial-gradient(circle at 20% 0%, #9a3a6a 0%, #5a1a3f 75%)',
@@ -31,6 +38,7 @@ const temas: Record<string, TemaCategoria> = {
     acento: '#f2c230',
     acentoTexto: '#13204a',
   },
+  Accesorios: temaAccesorios,
   Cooperativos: {
     fondo: 'radial-gradient(circle at 20% 0%, #2a8a86 0%, #0f3d3f 75%)',
     titulo: '#fdebd0',

@@ -98,7 +98,7 @@ function ProductCard({ producto, onVer }: ProductCardProps) {
           className="h-9 rounded-full px-5 text-xs font-bold uppercase tracking-widest"
           style={{ background: tema.acento, color: tema.acentoTexto }}
         >
-          Ver juego
+          {producto.tipo === 'juego' ? 'Ver juego' : 'Ver producto'}
         </Button>
       </CardFooter>
     </Card>

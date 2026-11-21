@@ -6,6 +6,17 @@ from django.db import models
 # Desde esta cantidad hacia abajo se avisa "últimas unidades"
 STOCK_BAJO = 3
 
+# Tipos de producto que vende la tienda (todo lo que no es juego es "extra")
+TIPOS = [
+    ('juego', 'Juegos'),
+    ('miniatura', 'Miniaturas'),
+    ('pintura', 'Pinturas'),
+    ('micas', 'Micas y fundas'),
+    ('peluche', 'Peluches'),
+    ('recuerdo', 'Recuerdos'),
+    ('dado', 'Dados'),
+]
+
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=60, unique=True)
@@ -23,14 +34,19 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=8, decimal_places=2)
-    imagen = models.URLField(max_length=500, help_text='Enlace a la portada del juego')
+    imagen = models.URLField(
+        max_length=500, blank=True,
+        help_text='Enlace a la portada (si lo dejas vacío se usa una ilustración según el tipo)',
+    )
     stock = models.PositiveIntegerField(default=0)
     categoria = models.ForeignKey(
         Categoria, on_delete=models.CASCADE, related_name='productos'
     )
-    jugadores = models.CharField(max_length=20, help_text='Ej: 3-4')
-    duracion = models.CharField(max_length=20, help_text='Ej: 60-120 (minutos)')
-    edad = models.CharField(max_length=10, help_text='Ej: +10')
+    tipo = models.CharField(max_length=15, choices=TIPOS, default='juego')
+    # Solo aplican a los juegos: en miniaturas, pinturas, dados, etc. se dejan vacíos
+    jugadores = models.CharField(max_length=20, blank=True, help_text='Ej: 3-4')
+    duracion = models.CharField(max_length=20, blank=True, help_text='Ej: 60-120 (minutos)')
+    edad = models.CharField(max_length=10, blank=True, help_text='Ej: +10')
     # Marketing: porcentaje de descuento (0 = sin promoción)
     descuento = models.PositiveSmallIntegerField(
         default=0,

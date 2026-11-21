@@ -14,7 +14,7 @@ function CategoryTiles({ categorias, productos, onSeleccionar }: CategoryTilesPr
     <section id="categorias" className="mx-auto max-w-6xl space-y-6 px-4 py-12">
       <SectionTitle numero="02" titulo="Categorías" derecha="Elige cómo quieres jugar" />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {categorias.map((categoria, i) => {
           const delCategoria = productos.filter((p) => p.categoria === categoria)
           const portada = delCategoria[0]
@@ -50,7 +50,7 @@ function CategoryTiles({ categorias, productos, onSeleccionar }: CategoryTilesPr
                   {categoria}
                 </p>
                 <p className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-white/70">
-                  {delCategoria.length} juegos
+                  {delCategoria.length} productos
                 </p>
               </div>
             </button>

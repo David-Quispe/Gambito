@@ -14,6 +14,8 @@ export interface Producto {
   jugadores: string
   duracion: string
   edad: string
+  tipo: string
+  tipo_nombre: string
 }
 
 export type Orden = '' | 'populares' | 'precio_asc' | 'precio_desc' | 'descuento' | 'nombre'
@@ -21,6 +23,7 @@ export type Orden = '' | 'populares' | 'precio_asc' | 'precio_desc' | 'descuento
 // Lo que el visitante puede pedir al catálogo (se envía a Django como parámetros)
 export interface Filtros {
   categoria: string
+  tipo: string
   buscar: string
   precioMax: number | null
   soloOfertas: boolean

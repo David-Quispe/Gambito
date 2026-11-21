@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TIPOS } from '@/lib/tipos'
 import type { Filtros, Orden } from '@/types/producto'
 
 interface BuscadorFiltrosProps {
@@ -23,6 +24,7 @@ function BuscadorFiltros({ filtros, precioTope, onCambiar, onLimpiar }: Buscador
   const precioMax = filtros.precioMax ?? precioTope
 
   const hayFiltros =
+    filtros.tipo !== 'todos' ||
     filtros.buscar !== '' ||
     filtros.precioMax !== null ||
     filtros.soloOfertas ||
@@ -51,6 +53,22 @@ function BuscadorFiltros({ filtros, precioTope, onCambiar, onLimpiar }: Buscador
         >
           Filtros {abierto ? '▲' : '▼'}
         </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Tipo de producto">
+        {TIPOS.map((t) => (
+          <button
+            key={t.valor}
+            type="button"
+            onClick={() => onCambiar({ tipo: t.valor })}
+            aria-pressed={filtros.tipo === t.valor}
+            className={`h-8 border border-ink px-3 text-[11px] font-bold uppercase tracking-widest transition ${
+              filtros.tipo === t.valor ? 'bg-ink text-paper' : 'hover:bg-ink/10'
+            }`}
+          >
+            {t.texto}
+          </button>
+        ))}
       </div>
 
       <div className={`${abierto ? 'grid' : 'hidden'} gap-4 md:grid md:grid-cols-2 lg:grid-cols-4`}>
