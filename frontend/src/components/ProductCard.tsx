@@ -1,6 +1,7 @@
 import { usarRespaldo } from '@/lib/imagen'
 import StatBadge from '@/components/StatBadge'
 import { Badge } from '@/components/ui/badge'
+import BotonAgregar from '@/components/BotonAgregar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import Precio from '@/components/Precio'
@@ -93,13 +94,20 @@ function ProductCard({ producto, onVer }: ProductCardProps) {
           </Badge>
         </div>
 
-        <Button
-          onClick={() => onVer(producto)}
-          className="h-9 rounded-full px-5 text-xs font-bold uppercase tracking-widest"
-          style={{ background: tema.acento, color: tema.acentoTexto }}
-        >
-          {producto.tipo === 'juego' ? 'Ver juego' : 'Ver producto'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <BotonAgregar
+            producto={producto}
+            className="border-2 hover:opacity-80"
+            style={{ borderColor: tema.acento, color: tema.titulo }}
+          />
+          <Button
+            onClick={() => onVer(producto)}
+            className="h-9 rounded-full px-5 text-xs font-bold uppercase tracking-widest"
+            style={{ background: tema.acento, color: tema.acentoTexto }}
+          >
+            {producto.tipo === 'juego' ? 'Ver juego' : 'Ver producto'}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   )

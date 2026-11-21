@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 
-from .models import STOCK_BAJO, Categoria, Producto
+from .models import STOCK_BAJO, Categoria, ItemPedido, Pedido, Producto
 
 
 class EstadoStockFilter(admin.SimpleListFilter):
@@ -79,3 +79,49 @@ class ProductoAdmin(admin.ModelAdmin):
     def quitar_descuento(self, request, queryset):
         cantidad = queryset.update(descuento=0)
         self.message_user(request, f'Se quitó el descuento a {cantidad} juego(s).', messages.SUCCESS)
+
+
+class ItemPedidoInline(admin.TabularInline):
+    model = ItemPedido
+    extra = 0
+    can_delete = False
+    fields = ('nombre', 'precio_unitario', 'cantidad')
+    readonly_fields = ('nombre', 'precio_unitario', 'cantidad')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Pedido)
+class PedidoAdmin(admin.ModelAdmin):
+    """Pedidos de los clientes: el administrador cambia el estado o cancela (devuelve el stock)."""
+
+    list_display = ('id', 'usuario', 'nombre_cliente', 'creado', 'estado', 'metodo_pago', 'total')
+    list_filter = ('estado', 'metodo_pago')
+    search_fields = ('nombre_cliente', 'usuario__username')
+    readonly_fields = ('usuario', 'creado', 'metodo_pago', 'referencia_pago', 'total')
+    inlines = [ItemPedidoInline]
+    actions = ['marcar_pagado', 'marcar_enviado', 'marcar_entregado', 'cancelar_y_devolver_stock']
+
+    def has_add_permission(self, request):
+        return False  # los pedidos solo nacen desde la tienda
+
+    @admin.action(description='Marcar como pagado')
+    def marcar_pagado(self, request, queryset):
+        cantidad = queryset.exclude(estado='cancelado').update(estado='pagado')
+        self.message_user(request, f'{cantidad} pedido(s) marcados como pagados.', messages.SUCCESS)
+
+    @admin.action(description='Marcar como enviado')
+    def marcar_enviado(self, request, queryset):
+        cantidad = queryset.exclude(estado='cancelado').update(estado='enviado')
+        self.message_user(request, f'{cantidad} pedido(s) marcados como enviados.', messages.SUCCESS)
+
+    @admin.action(description='Marcar como entregado')
+    def marcar_entregado(self, request, queryset):
+        cantidad = queryset.exclude(estado='cancelado').update(estado='entregado')
+        self.message_user(request, f'{cantidad} pedido(s) marcados como entregados.', messages.SUCCESS)
+
+    @admin.action(description='Cancelar y devolver el stock al inventario')
+    def cancelar_y_devolver_stock(self, request, queryset):
+        cancelados = sum(1 for pedido in queryset if pedido.cancelar())
+        self.message_user(request, f'{cancelados} pedido(s) cancelados y stock devuelto.', messages.SUCCESS)

@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react'
 import AuthModal, { type ModoAuth } from '@/components/AuthModal'
 import BuscadorFiltros from '@/components/BuscadorFiltros'
+import CarritoPanel from '@/components/CarritoPanel'
 import CategoryFilter from '@/components/CategoryFilter'
 import CategoryTiles from '@/components/CategoryTiles'
+import Checkout from '@/components/Checkout'
 import { Cargando, ErrorCarga } from '@/components/Estado'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import InventarioAdmin from '@/components/InventarioAdmin'
+import MisPedidos from '@/components/MisPedidos'
 import ProductDetail from '@/components/ProductDetail'
 import ProductList from '@/components/ProductList'
 import PromoBanner from '@/components/PromoBanner'
 import Recomendados from '@/components/Recomendados'
 import SectionTitle from '@/components/SectionTitle'
+import { useCarrito } from '@/lib/carrito'
 import { borrarToken, leerToken } from '@/lib/sesion'
 import {
   cerrarSesion,
@@ -49,7 +53,14 @@ function App() {
   // Sesión: quién está conectado, qué ventana de cuenta está abierta y qué pantalla se ve
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [modalAuth, setModalAuth] = useState<ModoAuth | null>(null)
-  const [vista, setVista] = useState<'tienda' | 'inventario'>('tienda')
+  const [vista, setVista] = useState<'tienda' | 'inventario' | 'pedidos'>('tienda')
+
+  // Carrito: el estado vive en CarritoProvider, aquí solo se controlan las ventanas
+  const carrito = useCarrito()
+  const { sincronizar } = carrito
+  const [carritoAbierto, setCarritoAbierto] = useState(false)
+  const [pagando, setPagando] = useState(false)
+  const [pagarAlEntrar, setPagarAlEntrar] = useState(false)
 
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -78,6 +89,11 @@ function App() {
       cancelado = true
     }
   }, [intento])
+
+  // Cada vez que llega el catálogo se ponen al día los precios y el stock del carrito
+  useEffect(() => {
+    if (todos.length > 0) sincronizar(todos)
+  }, [todos, sincronizar])
 
   // Si quedó una sesión guardada en el navegador, se comprueba con el servidor
   useEffect(() => {
@@ -124,7 +140,23 @@ function App() {
   function salir() {
     cerrarSesion().catch(() => undefined)
     setUsuario(null)
+    setPagando(false)
     setVista('tienda')
+  }
+
+  // Desde el carrito: si no hay sesión se pide entrar y después se abre el pago
+  function irAPagar() {
+    setCarritoAbierto(false)
+    if (usuario) {
+      setPagando(true)
+    } else {
+      setPagarAlEntrar(true)
+      setModalAuth('ingresar')
+    }
+  }
+
+  function refrescarCatalogo() {
+    setIntento((n) => n + 1) // la compra bajó el stock: se vuelve a pedir el catálogo
   }
 
   function volverALaTienda() {
@@ -160,6 +192,10 @@ function App() {
       <Header
         usuario={usuario}
         enInventario={vista === 'inventario'}
+        enPedidos={vista === 'pedidos'}
+        cantidadCarrito={carrito.cantidadTotal}
+        onCarrito={() => setCarritoAbierto(true)}
+        onPedidos={() => setVista('pedidos')}
         onIngresar={() => setModalAuth('ingresar')}
         onRegistrarse={() => setModalAuth('registro')}
         onSalir={salir}
@@ -168,6 +204,8 @@ function App() {
       />
 
       {vista === 'inventario' && usuario?.es_admin && <InventarioAdmin onVolver={volverALaTienda} />}
+
+      {vista === 'pedidos' && usuario && <MisPedidos onVolver={volverALaTienda} />}
 
       {vista === 'tienda' && cargando && <Cargando />}
 
@@ -218,11 +256,33 @@ function App() {
       {modalAuth && (
         <AuthModal
           modoInicial={modalAuth}
-          onCerrar={() => setModalAuth(null)}
+          onCerrar={() => {
+            setModalAuth(null)
+            setPagarAlEntrar(false)
+          }}
           onExito={(u) => {
             setUsuario(u)
             setModalAuth(null)
-            if (u.es_admin) setVista('inventario')
+            if (pagarAlEntrar) {
+              setPagarAlEntrar(false)
+              setPagando(true)
+            } else if (u.es_admin) {
+              setVista('inventario')
+            }
+          }}
+        />
+      )}
+
+      {carritoAbierto && <CarritoPanel onCerrar={() => setCarritoAbierto(false)} onPagar={irAPagar} />}
+
+      {pagando && usuario && (
+        <Checkout
+          usuario={usuario}
+          onCerrar={() => setPagando(false)}
+          onCompraHecha={refrescarCatalogo}
+          onVerPedidos={() => {
+            setPagando(false)
+            setVista('pedidos')
           }}
         />
       )}

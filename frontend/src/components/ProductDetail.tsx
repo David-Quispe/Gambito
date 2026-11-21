@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import BotonAgregar from '@/components/BotonAgregar'
 import InfoJuego from '@/components/InfoJuego'
 import MiniProducto from '@/components/MiniProducto'
 import Precio from '@/components/Precio'
@@ -126,6 +127,11 @@ function ProductDetail({ producto, onCerrar, onVer }: ProductDetailProps) {
                       ? `¡Últimas ${producto.stock} unidades!`
                       : `${producto.stock} disponibles`}
                 </span>
+                <BotonAgregar
+                  producto={producto}
+                  className="h-10 px-6"
+                  style={{ background: tema.acento, color: tema.acentoTexto }}
+                />
               </div>
             </div>
           </div>

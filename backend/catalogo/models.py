@@ -1,7 +1,8 @@
 from decimal import Decimal, ROUND_HALF_UP
 
+from django.conf import settings
 from django.core.validators import MaxValueValidator
-from django.db import models
+from django.db import models, transaction
 
 # Desde esta cantidad hacia abajo se avisa "últimas unidades"
 STOCK_BAJO = 3
@@ -92,3 +93,71 @@ class Producto(models.Model):
     @property
     def stock_bajo(self):
         return 0 < self.stock <= STOCK_BAJO
+
+
+ESTADOS_PEDIDO = [
+    ('pendiente', 'Pendiente de pago'),
+    ('pagado', 'Pagado'),
+    ('enviado', 'Enviado'),
+    ('entregado', 'Entregado'),
+    ('cancelado', 'Cancelado'),
+]
+
+METODOS_PAGO = [
+    ('tarjeta', 'Tarjeta (simulada)'),
+    ('yape', 'Yape (simulado)'),
+    ('contraentrega', 'Pago contra entrega'),
+]
+
+
+class Pedido(models.Model):
+    """Una compra. El pago es simulado: nunca se guardan datos reales de tarjetas."""
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='pedidos'
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=12, choices=ESTADOS_PEDIDO, default='pagado')
+    metodo_pago = models.CharField(max_length=15, choices=METODOS_PAGO)
+    referencia_pago = models.CharField(max_length=40, blank=True)
+    nombre_cliente = models.CharField(max_length=80)
+    direccion = models.CharField(max_length=200)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        ordering = ['-creado']
+
+    def __str__(self):
+        return f'Pedido #{self.pk}'
+
+    @transaction.atomic
+    def cancelar(self):
+        """Cancela el pedido y devuelve las unidades al inventario (una sola vez)."""
+        if self.estado == 'cancelado':
+            return False
+        for item in self.items.select_related('producto'):
+            producto = item.producto
+            if producto is None:
+                continue
+            producto.stock += item.cantidad
+            producto.ventas = max(0, producto.ventas - item.cantidad)
+            producto.save(update_fields=['stock', 'ventas'])
+        self.estado = 'cancelado'
+        self.save(update_fields=['estado'])
+        return True
+
+
+class ItemPedido(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='items')
+    producto = models.ForeignKey(Producto, null=True, on_delete=models.SET_NULL, related_name='+')
+    # Se guardan nombre y precio del momento de la compra, por si después cambian
+    nombre = models.CharField(max_length=100)
+    precio_unitario = models.DecimalField(max_digits=8, decimal_places=2)
+    cantidad = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f'{self.cantidad} x {self.nombre}'
+
+    @property
+    def subtotal(self):
+        return self.precio_unitario * self.cantidad

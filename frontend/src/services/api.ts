@@ -1,4 +1,5 @@
 import { borrarToken, guardarToken, leerToken } from '@/lib/sesion'
+import type { DatosCompra, Pedido } from '@/types/pedido'
 import type { Filtros, Producto, ResumenInventario, Usuario } from '@/types/producto'
 
 // Dirección donde corre el backend de Django
@@ -14,11 +15,19 @@ export interface Categoria {
 export class ErrorApi extends Error {
   estado: number
   campos: Record<string, string[]>
+  // Cuerpo completo de la respuesta (en un 409 trae la lista de productos sin stock)
+  cuerpo: Record<string, unknown>
 
-  constructor(mensaje: string, estado: number, campos: Record<string, string[]> = {}) {
+  constructor(
+    mensaje: string,
+    estado: number,
+    campos: Record<string, string[]> = {},
+    cuerpo: Record<string, unknown> = {},
+  ) {
     super(mensaje)
     this.estado = estado
     this.campos = campos
+    this.cuerpo = cuerpo
   }
 }
 
@@ -32,15 +41,17 @@ async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   if (!respuesta.ok) {
     let detalle = `El servidor respondió con el código ${respuesta.status}`
     let campos: Record<string, string[]> = {}
+    let cuerpoCompleto: Record<string, unknown> = {}
     try {
       const cuerpo = await respuesta.json()
+      if (cuerpo && typeof cuerpo === 'object') cuerpoCompleto = cuerpo
       if (cuerpo?.detalle) detalle = cuerpo.detalle
       else if (cuerpo?.detail) detalle = cuerpo.detail
       else if (typeof cuerpo === 'object') campos = cuerpo
     } catch {
       // la respuesta no era JSON: se queda el mensaje genérico
     }
-    throw new ErrorApi(detalle, respuesta.status, campos)
+    throw new ErrorApi(detalle, respuesta.status, campos, cuerpoCompleto)
   }
   if (respuesta.status === 204) return undefined as T
   return respuesta.json() as Promise<T>
@@ -130,4 +141,18 @@ export function ajustarStock(id: number, cantidad: number): Promise<Producto> {
     headers: JSON_CABECERA,
     body: JSON.stringify({ cantidad }),
   })
+}
+
+// ---------- Pedidos ----------
+
+export function crearPedido(datos: DatosCompra): Promise<Pedido> {
+  return pedir<Pedido>('/pedidos/', {
+    method: 'POST',
+    headers: JSON_CABECERA,
+    body: JSON.stringify(datos),
+  })
+}
+
+export function obtenerPedidos(): Promise<Pedido[]> {
+  return pedir<Pedido[]>('/pedidos/')
 }

@@ -12,6 +12,10 @@ const enlaces = [
 interface HeaderProps {
   usuario: Usuario | null
   enInventario: boolean
+  enPedidos: boolean
+  cantidadCarrito: number
+  onCarrito: () => void
+  onPedidos: () => void
   onIngresar: () => void
   onRegistrarse: () => void
   onSalir: () => void
@@ -19,12 +23,26 @@ interface HeaderProps {
   onTienda: () => void
 }
 
-function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onInventario, onTienda }: HeaderProps) {
+function Header({
+  usuario,
+  enInventario,
+  enPedidos,
+  cantidadCarrito,
+  onCarrito,
+  onPedidos,
+  onIngresar,
+  onRegistrarse,
+  onSalir,
+  onInventario,
+  onTienda,
+}: HeaderProps) {
   // Menú desplegable para pantallas pequeñas
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   const cerrar = () => setMenuAbierto(false)
   const botonBase = 'h-9 px-4 text-xs font-bold uppercase tracking-widest transition'
+  // En Inventario y Mis pedidos se esconde el menú de la tienda
+  const enOtraVista = enInventario || enPedidos
 
   const cuenta = usuario ? (
     <div className="flex flex-wrap items-center gap-2">
@@ -34,6 +52,18 @@ function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onI
           <span className="ml-2 bg-hot px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Admin</span>
         )}
       </span>
+      {!enPedidos && (
+        <button
+          type="button"
+          onClick={() => {
+            cerrar()
+            onPedidos()
+          }}
+          className={`${botonBase} border border-paper/40 text-paper hover:bg-paper/10`}
+        >
+          Mis pedidos
+        </button>
+      )}
       {usuario.es_admin && !enInventario && (
         <button
           type="button"
@@ -88,7 +118,7 @@ function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onI
         <a
           href="#destacado"
           onClick={() => {
-            if (enInventario) onTienda()
+            if (enOtraVista) onTienda()
           }}
           className="flex items-center gap-3"
         >
@@ -99,7 +129,7 @@ function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onI
           </span>
         </a>
 
-        {!enInventario && (
+        {!enOtraVista && (
           <nav className="hidden items-center gap-4 2xl:flex">
             {enlaces.map((enlace) => (
               <a
@@ -114,7 +144,7 @@ function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onI
           </nav>
         )}
 
-        {enInventario && (
+        {enOtraVista && (
           <button
             type="button"
             onClick={onTienda}
@@ -125,6 +155,25 @@ function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onI
         )}
 
         <div className="hidden lg:block">{cuenta}</div>
+
+        <button
+          type="button"
+          onClick={onCarrito}
+          aria-label={`Abrir carrito (${cantidadCarrito} productos)`}
+          className="relative flex h-10 items-center gap-2 border border-paper/40 px-3 text-xs font-bold uppercase tracking-widest hover:bg-paper/10"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5" aria-hidden>
+            <circle cx="9" cy="20" r="1.5" />
+            <circle cx="18" cy="20" r="1.5" />
+            <path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6" />
+          </svg>
+          <span className="hidden sm:inline">Carrito</span>
+          {cantidadCarrito > 0 && (
+            <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-hot text-[11px] text-white">
+              {cantidadCarrito}
+            </span>
+          )}
+        </button>
 
         <button
           type="button"
@@ -140,7 +189,7 @@ function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onI
       {menuAbierto && (
         <nav className="border-t border-paper/15 bg-ink 2xl:hidden">
           <ul className="mx-auto max-w-6xl px-4 py-2">
-            {!enInventario &&
+            {!enOtraVista &&
               enlaces.map((enlace) => (
                 <li key={enlace.href}>
                   <a
@@ -153,7 +202,7 @@ function Header({ usuario, enInventario, onIngresar, onRegistrarse, onSalir, onI
                   </a>
                 </li>
               ))}
-            {enInventario && (
+            {enOtraVista && (
               <li>
                 <button
                   type="button"
