@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 
-from .models import STOCK_BAJO, Categoria, Deseo, ItemPedido, Pedido, Producto
+from .models import STOCK_BAJO, Categoria, Deseo, ItemPedido, Novedad, Participacion, Pedido, Producto
 
 
 class EstadoStockFilter(admin.SimpleListFilter):
@@ -132,3 +132,45 @@ class DeseoAdmin(admin.ModelAdmin):
     list_display = ('producto', 'usuario', 'creado')
     list_filter = ('producto__categoria',)
     search_fields = ('producto__nombre', 'usuario__username')
+
+
+class ParticipacionInline(admin.TabularInline):
+    model = Participacion
+    extra = 0
+    can_delete = False
+    fields = ('usuario', 'creado')
+    readonly_fields = ('usuario', 'creado')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Novedad)
+class NovedadAdmin(admin.ModelAdmin):
+    """Torneos, juegos nuevos y sorteos. El sorteo se realiza con la acción de abajo."""
+
+    list_display = ('titulo', 'tipo', 'fecha', 'publicada', 'inscritos', 'ganador')
+    list_filter = ('tipo', 'publicada')
+    search_fields = ('titulo', 'resumen')
+    readonly_fields = ('ganador',)
+    inlines = [ParticipacionInline]
+    actions = ['sortear_ganador']
+
+    @admin.display(description='Inscritos')
+    def inscritos(self, obj):
+        return obj.participaciones.count()
+
+    @admin.action(description='Sortear un ganador entre los inscritos')
+    def sortear_ganador(self, request, queryset):
+        sorteados = 0
+        for novedad in queryset.filter(tipo='sorteo', ganador__isnull=True):
+            participacion = novedad.participaciones.order_by('?').select_related('usuario').first()
+            if participacion is None:
+                self.message_user(request, f'«{novedad.titulo}» no tiene inscritos todavía.', messages.WARNING)
+                continue
+            novedad.ganador = participacion.usuario
+            novedad.save(update_fields=['ganador'])
+            sorteados += 1
+            self.message_user(request, f'Ganador de «{novedad.titulo}»: {participacion.usuario.username}.', messages.SUCCESS)
+        if not sorteados:
+            self.message_user(request, 'No había sorteos pendientes con inscritos.', messages.INFO)

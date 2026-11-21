@@ -2,6 +2,7 @@ import { borrarToken, guardarToken, leerToken } from '@/lib/sesion'
 import type { DatosCompra, Pedido } from '@/types/pedido'
 import type { Filtros, Producto, ResumenInventario, Usuario } from '@/types/producto'
 import type { ReporteDemanda } from '@/types/deseo'
+import type { Novedad } from '@/types/novedad'
 
 // Dirección donde corre el backend de Django
 const API_URL = 'http://127.0.0.1:8000/api'
@@ -178,4 +179,18 @@ export function quitarDeseo(producto: number): Promise<void> {
 
 export function obtenerDemanda(): Promise<ReporteDemanda> {
   return pedir<ReporteDemanda>('/demanda/')
+}
+
+// ---- Novedades (torneos, juegos nuevos y sorteos) ----
+
+export function obtenerNovedades(): Promise<Novedad[]> {
+  return pedir<Novedad[]>('/novedades/')
+}
+
+export function participarEn(id: number): Promise<Novedad> {
+  return pedir<Novedad>(`/novedades/${id}/participar/`, { method: 'POST' })
+}
+
+export function salirDe(id: number): Promise<Novedad> {
+  return pedir<Novedad>(`/novedades/${id}/participar/`, { method: 'DELETE' })
 }

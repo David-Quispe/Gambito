@@ -14,10 +14,12 @@ interface HeaderProps {
   enInventario: boolean
   enPedidos: boolean
   enDeseos: boolean
+  enNovedades: boolean
   cantidadCarrito: number
   onCarrito: () => void
   onPedidos: () => void
   onDeseos: () => void
+  onNovedades: () => void
   onIngresar: () => void
   onRegistrarse: () => void
   onSalir: () => void
@@ -30,10 +32,12 @@ function Header({
   enInventario,
   enPedidos,
   enDeseos,
+  enNovedades,
   cantidadCarrito,
   onCarrito,
   onPedidos,
   onDeseos,
+  onNovedades,
   onIngresar,
   onRegistrarse,
   onSalir,
@@ -46,7 +50,7 @@ function Header({
   const cerrar = () => setMenuAbierto(false)
   const botonBase = 'h-9 px-4 text-xs font-bold uppercase tracking-widest transition'
   // En Inventario y Mis pedidos se esconde el menú de la tienda
-  const enOtraVista = enInventario || enPedidos || enDeseos
+  const enOtraVista = enInventario || enPedidos || enDeseos || enNovedades
 
   const cuenta = usuario ? (
     <div className="flex flex-wrap items-center gap-2">
@@ -171,6 +175,17 @@ function Header({
         )}
 
         <div className="hidden lg:block">{cuenta}</div>
+
+        {!enNovedades && (
+          <button
+            type="button"
+            onClick={onNovedades}
+            className="h-10 border border-paper/40 px-3 text-xs font-bold uppercase tracking-widest hover:bg-paper/10"
+          >
+            <span className="sm:hidden" aria-label="Novedades">★</span>
+            <span className="hidden sm:inline">Novedades</span>
+          </button>
+        )}
 
         <button
           type="button"

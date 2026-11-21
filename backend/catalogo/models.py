@@ -178,3 +178,55 @@ class Deseo(models.Model):
 
     def __str__(self):
         return f'{self.usuario} → {self.producto}'
+
+
+TIPOS_NOVEDAD = [
+    ('torneo', 'Torneo'),
+    ('nuevo', 'Juego nuevo'),
+    ('sorteo', 'Sorteo'),
+]
+
+
+class Novedad(models.Model):
+    """Anuncio de la tienda: un torneo, un juego recién llegado o un sorteo."""
+
+    tipo = models.CharField(max_length=10, choices=TIPOS_NOVEDAD)
+    titulo = models.CharField(max_length=120)
+    resumen = models.CharField(max_length=220, help_text='Una frase para la tarjeta.')
+    detalle = models.TextField(blank=True)
+    # Torneo: fecha de inicio. Sorteo: último día para participar.
+    fecha = models.DateTimeField(null=True, blank=True)
+    lugar = models.CharField(max_length=120, blank=True)
+    cupos = models.PositiveIntegerField(null=True, blank=True, help_text='Vacío = sin límite.')
+    producto = models.ForeignKey(
+        Producto, null=True, blank=True, on_delete=models.SET_NULL, related_name='novedades',
+        help_text='Juego que se anuncia o que se sortea.',
+    )
+    publicada = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    ganador = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='sorteos_ganados',
+    )
+
+    class Meta:
+        ordering = ['-creado']
+        verbose_name_plural = 'novedades'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()}: {self.titulo}'
+
+
+class Participacion(models.Model):
+    """Inscripción de una persona a un torneo o sorteo."""
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='participaciones')
+    novedad = models.ForeignKey(Novedad, on_delete=models.CASCADE, related_name='participaciones')
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'novedad'], name='participacion_unica'),
+        ]
+
+    def __str__(self):
+        return f'{self.usuario} en {self.novedad}'

@@ -11,6 +11,7 @@ import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import InventarioAdmin from '@/components/InventarioAdmin'
 import MisDeseos from '@/components/MisDeseos'
+import Novedades from '@/components/Novedades'
 import MisPedidos from '@/components/MisPedidos'
 import ProductDetail from '@/components/ProductDetail'
 import ProductList from '@/components/ProductList'
@@ -55,7 +56,7 @@ function App() {
   // Sesión: quién está conectado, qué ventana de cuenta está abierta y qué pantalla se ve
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [modalAuth, setModalAuth] = useState<ModoAuth | null>(null)
-  const [vista, setVista] = useState<'tienda' | 'inventario' | 'pedidos' | 'deseos'>('tienda')
+  const [vista, setVista] = useState<'tienda' | 'inventario' | 'pedidos' | 'deseos' | 'novedades'>('tienda')
 
   // Carrito: el estado vive en CarritoProvider, aquí solo se controlan las ventanas
   const carrito = useCarrito()
@@ -203,10 +204,12 @@ function App() {
         enInventario={vista === 'inventario'}
         enPedidos={vista === 'pedidos'}
         enDeseos={vista === 'deseos'}
+        enNovedades={vista === 'novedades'}
         cantidadCarrito={carrito.cantidadTotal}
         onCarrito={() => setCarritoAbierto(true)}
         onPedidos={() => setVista('pedidos')}
         onDeseos={() => setVista('deseos')}
+        onNovedades={() => setVista('novedades')}
         onIngresar={() => setModalAuth('ingresar')}
         onRegistrarse={() => setModalAuth('registro')}
         onSalir={salir}
@@ -215,6 +218,15 @@ function App() {
       />
 
       {vista === 'inventario' && usuario?.es_admin && <InventarioAdmin onVolver={volverALaTienda} />}
+
+      {vista === 'novedades' && (
+        <Novedades
+          usuario={usuario}
+          onIngresar={() => setModalAuth('ingresar')}
+          onVolver={volverALaTienda}
+          onVerCatalogo={volverALaTienda}
+        />
+      )}
 
       {vista === 'deseos' && usuario && <MisDeseos onVer={setDetalle} onVolver={volverALaTienda} />}
 
