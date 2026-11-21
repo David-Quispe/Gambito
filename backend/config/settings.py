@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'catalogo',
 ]
@@ -139,4 +140,8 @@ CORS_ALLOWED_ORIGINS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+    # El frontend manda "Authorization: Token <clave>" después de iniciar sesión
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication'],
+    # Límite de intentos en registro e inicio de sesión (frena adivinar contraseñas)
+    'DEFAULT_THROTTLE_RATES': {'auth': '30/min'},
 }

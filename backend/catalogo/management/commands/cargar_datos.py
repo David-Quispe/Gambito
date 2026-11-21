@@ -189,6 +189,26 @@ PRODUCTOS = [
     }
 ]
 
+# Datos de marketing (Lab 14): % de descuento y unidades vendidas de cada juego
+PROMOCIONES = {
+    "Catan": {"descuento": 15, "ventas": 48},
+    "Carcassonne": {"descuento": 0, "ventas": 35},
+    "Root": {"descuento": 10, "ventas": 12},
+    "Terraforming Mars": {"descuento": 0, "ventas": 18},
+    "7 Wonders": {"descuento": 0, "ventas": 22},
+    "Ticket to Ride": {"descuento": 12, "ventas": 44},
+    "Azul": {"descuento": 0, "ventas": 30},
+    "Dixit": {"descuento": 18, "ventas": 26},
+    "Wingspan": {"descuento": 0, "ventas": 28},
+    "Uno": {"descuento": 0, "ventas": 55},
+    "Exploding Kittens": {"descuento": 20, "ventas": 38},
+    "Love Letter": {"descuento": 0, "ventas": 16},
+    "Dobble": {"descuento": 25, "ventas": 60},
+    "Codenames": {"descuento": 0, "ventas": 33},
+    "Pandemic": {"descuento": 20, "ventas": 40},
+    "Forbidden Island": {"descuento": 0, "ventas": 14},
+}
+
 
 class Command(BaseCommand):
     help = 'Carga las categorías y los juegos de ejemplo de la tienda Gambito'
@@ -200,6 +220,7 @@ class Command(BaseCommand):
             )
         for datos in PRODUCTOS:
             datos = dict(datos)
+            datos.update(PROMOCIONES.get(datos['nombre'], {}))
             categoria = Categoria.objects.get(nombre=datos.pop('categoria'))
             Producto.objects.update_or_create(
                 nombre=datos.pop('nombre'),

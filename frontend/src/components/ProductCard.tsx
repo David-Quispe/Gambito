@@ -3,31 +3,17 @@ import StatBadge from '@/components/StatBadge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import Precio from '@/components/Precio'
 import { obtenerTema } from '@/lib/temas'
+import type { Producto } from '@/types/producto'
 
 interface ProductCardProps {
-  nombre: string
-  descripcion: string
-  precio: number
-  imagen: string
-  categoria: string
-  stock: number
-  jugadores: string
-  duracion: string
-  edad: string
+  producto: Producto
+  onVer: (producto: Producto) => void
 }
 
-function ProductCard({
-  nombre,
-  descripcion,
-  precio,
-  imagen,
-  categoria,
-  stock,
-  jugadores,
-  duracion,
-  edad,
-}: ProductCardProps) {
+function ProductCard({ producto, onVer }: ProductCardProps) {
+  const { nombre, descripcion, imagen, categoria, stock, jugadores, duracion, edad } = producto
   const tema = obtenerTema(categoria)
   const sinStock = stock === 0
 
@@ -63,6 +49,11 @@ function ProductCard({
               sinStock ? 'grayscale' : ''
             }`}
           />
+          {producto.en_oferta && !sinStock && (
+            <span className="absolute right-3 top-3 rotate-3 bg-hot px-3 py-1 font-display text-xl tracking-wider text-white shadow-lg">
+              -{producto.descuento}%
+            </span>
+          )}
           {sinStock && (
             <span className="absolute left-3 top-3 -rotate-2 bg-black/80 px-3 py-1 font-display text-lg tracking-widest">
               AGOTADO
@@ -83,25 +74,31 @@ function ProductCard({
 
       <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t border-white/15 bg-black/20 px-6 py-4">
         <div className="flex items-center gap-3">
-          <span className="font-display text-3xl leading-none" style={{ color: tema.titulo }}>
-            S/ {precio.toFixed(2)}
-          </span>
+          <Precio producto={producto} color={tema.titulo} />
           <Badge
             variant="outline"
             className={`border-white/40 text-[11px] uppercase tracking-wider ${
-              sinStock ? 'bg-red-500/30 text-white' : 'text-white'
+              sinStock
+                ? 'bg-red-500/30 text-white'
+                : producto.stock_bajo
+                  ? 'bg-amber-400/90 text-ink'
+                  : 'text-white'
             }`}
           >
-            {sinStock ? 'Sin stock' : `${stock} disponibles`}
+            {sinStock
+              ? 'Sin stock'
+              : producto.stock_bajo
+                ? `¡Últimas ${stock}!`
+                : `${stock} disponibles`}
           </Badge>
         </div>
 
         <Button
-          disabled={sinStock}
+          onClick={() => onVer(producto)}
           className="h-9 rounded-full px-5 text-xs font-bold uppercase tracking-widest"
           style={{ background: tema.acento, color: tema.acentoTexto }}
         >
-          {sinStock ? 'Agotado' : 'Ver juego'}
+          Ver juego
         </Button>
       </CardFooter>
     </Card>

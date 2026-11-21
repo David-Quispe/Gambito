@@ -1,35 +1,69 @@
 import { useEffect, useState } from 'react'
+import AuthModal, { type ModoAuth } from '@/components/AuthModal'
+import BuscadorFiltros from '@/components/BuscadorFiltros'
 import CategoryFilter from '@/components/CategoryFilter'
 import CategoryTiles from '@/components/CategoryTiles'
 import { Cargando, ErrorCarga } from '@/components/Estado'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
+import InventarioAdmin from '@/components/InventarioAdmin'
+import ProductDetail from '@/components/ProductDetail'
 import ProductList from '@/components/ProductList'
+import PromoBanner from '@/components/PromoBanner'
+import Recomendados from '@/components/Recomendados'
 import SectionTitle from '@/components/SectionTitle'
-import { obtenerCategorias, obtenerProductos } from '@/services/api'
-import type { Producto } from '@/types/producto'
+import { borrarToken, leerToken } from '@/lib/sesion'
+import {
+  cerrarSesion,
+  obtenerCategorias,
+  obtenerProductos,
+  obtenerRecomendados,
+  obtenerUsuarioActual,
+} from '@/services/api'
+import type { Filtros, Producto, Usuario } from '@/types/producto'
 
 // Juegos que rotan en la sección de destacados.
 const nombresDestacados = ['Root', 'Catan', 'Wingspan', 'Pandemic']
 
+const filtrosIniciales: Filtros = {
+  categoria: 'Todos',
+  buscar: '',
+  precioMax: null,
+  soloOfertas: false,
+  soloDisponibles: false,
+  orden: '',
+}
+
 function App() {
+  // todos: catálogo completo (para destacados, conteos y ofertas)
+  const [todos, setTodos] = useState<Producto[]>([])
+  // productos: lo que devuelve Django según los filtros activos
   const [productos, setProductos] = useState<Producto[]>([])
   const [categorias, setCategorias] = useState<string[]>([])
+  const [recomendados, setRecomendados] = useState<Producto[]>([])
+  const [filtros, setFiltros] = useState<Filtros>(filtrosIniciales)
+  const [detalle, setDetalle] = useState<Producto | null>(null)
+
+  // Sesión: quién está conectado, qué ventana de cuenta está abierta y qué pantalla se ve
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [modalAuth, setModalAuth] = useState<ModoAuth | null>(null)
+  const [vista, setVista] = useState<'tienda' | 'inventario'>('tienda')
+
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [intento, setIntento] = useState(0)
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todos')
 
-  // Pide los datos a Django al abrir la página (y cada vez que se pulsa "Reintentar")
+  // Carga inicial (y cada vez que se pulsa "Reintentar")
   useEffect(() => {
     let cancelado = false
 
-    Promise.all([obtenerProductos(), obtenerCategorias()])
-      .then(([listaProductos, listaCategorias]) => {
+    Promise.all([obtenerProductos(), obtenerCategorias(), obtenerRecomendados()])
+      .then(([lista, listaCategorias, populares]) => {
         if (cancelado) return
-        setProductos(listaProductos)
+        setTodos(lista)
         setCategorias(listaCategorias.map((categoria) => categoria.nombre))
+        setRecomendados(populares)
       })
       .catch((e: unknown) => {
         if (cancelado) return
@@ -44,62 +78,162 @@ function App() {
     }
   }, [intento])
 
+  // Si quedó una sesión guardada en el navegador, se comprueba con el servidor
+  useEffect(() => {
+    if (!leerToken()) return
+    let cancelado = false
+    obtenerUsuarioActual()
+      .then((u) => {
+        if (!cancelado) setUsuario(u)
+      })
+      .catch((e: unknown) => {
+        // 401: el token ya no sirve. Si el servidor está apagado se conserva por ahora.
+        if (!cancelado && e instanceof Error && 'estado' in e && e.estado === 401) borrarToken()
+      })
+    return () => {
+      cancelado = true
+    }
+  }, [])
+
+  // Búsqueda y filtros: se piden a Django 300 ms después de la última tecla
+  useEffect(() => {
+    let cancelado = false
+    const espera = setTimeout(() => {
+      obtenerProductos(filtros)
+        .then((lista) => {
+          if (!cancelado) setProductos(lista)
+        })
+        .catch((e: unknown) => {
+          if (!cancelado) setError(e instanceof Error ? e.message : 'Error desconocido')
+        })
+    }, 300)
+
+    return () => {
+      cancelado = true
+      clearTimeout(espera)
+    }
+  }, [filtros, intento])
+
   function reintentar() {
     setError(null)
     setCargando(true)
     setIntento((n) => n + 1)
   }
 
-  const productosFiltrados =
-    categoriaSeleccionada === 'Todos'
-      ? productos
-      : productos.filter((producto) => producto.categoria === categoriaSeleccionada)
+  function salir() {
+    cerrarSesion().catch(() => undefined)
+    setUsuario(null)
+    setVista('tienda')
+  }
 
-  const destacados = productos.filter((producto) => nombresDestacados.includes(producto.nombre))
+  function volverALaTienda() {
+    setVista('tienda')
+    setIntento((n) => n + 1) // el stock pudo cambiar, se vuelve a pedir el catálogo
+  }
 
-  const conteos: Record<string, number> = { Todos: productos.length }
-  for (const producto of productos) {
+  function cambiarFiltros(cambios: Partial<Filtros>) {
+    setFiltros((actuales) => ({ ...actuales, ...cambios }))
+  }
+
+  function verOfertas() {
+    setFiltros({ ...filtrosIniciales, soloOfertas: true, orden: 'descuento' })
+    document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  function seleccionarCategoria(categoria: string) {
+    cambiarFiltros({ categoria })
+  }
+
+  const destacados = todos.filter((producto) => nombresDestacados.includes(producto.nombre))
+
+  const conteos: Record<string, number> = { Todos: todos.length }
+  for (const producto of todos) {
     conteos[producto.categoria] = (conteos[producto.categoria] ?? 0) + 1
   }
 
+  // El deslizador de precio llega hasta el juego más caro (redondeado a decenas)
+  const precioTope = Math.max(10, Math.ceil(Math.max(0, ...todos.map((p) => p.precio_final)) / 10) * 10)
+
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <Header />
+      <Header
+        usuario={usuario}
+        enInventario={vista === 'inventario'}
+        onIngresar={() => setModalAuth('ingresar')}
+        onRegistrarse={() => setModalAuth('registro')}
+        onSalir={salir}
+        onInventario={() => setVista('inventario')}
+        onTienda={volverALaTienda}
+      />
 
-      {cargando && <Cargando />}
+      {vista === 'inventario' && usuario?.es_admin && <InventarioAdmin onVolver={volverALaTienda} />}
 
-      {!cargando && error && <ErrorCarga mensaje={error} onReintentar={reintentar} />}
+      {vista === 'tienda' && cargando && <Cargando />}
 
-      {!cargando && !error && (
+      {vista === 'tienda' && !cargando && error && <ErrorCarga mensaje={error} onReintentar={reintentar} />}
+
+      {vista === 'tienda' && !cargando && !error && (
         <>
+          <PromoBanner productos={todos} onVerOfertas={verOfertas} />
+
           {destacados.length > 0 && <Hero destacados={destacados} />}
 
           <CategoryTiles
             categorias={categorias}
-            productos={productos}
-            onSeleccionar={setCategoriaSeleccionada}
+            productos={todos}
+            onSeleccionar={seleccionarCategoria}
           />
 
           <section id="catalogo" className="mx-auto max-w-6xl space-y-6 px-4 pb-16">
             <SectionTitle
               numero="03"
               titulo="Nuestro catálogo"
-              derecha={`${productosFiltrados.length} de ${productos.length} juegos`}
+              derecha={`${productos.length} de ${todos.length} juegos`}
+            />
+
+            <BuscadorFiltros
+              filtros={filtros}
+              precioTope={precioTope}
+              onCambiar={cambiarFiltros}
+              onLimpiar={() => setFiltros({ ...filtrosIniciales, categoria: filtros.categoria })}
             />
 
             <CategoryFilter
               categorias={categorias}
-              categoriaSeleccionada={categoriaSeleccionada}
+              categoriaSeleccionada={filtros.categoria}
               conteos={conteos}
-              onSeleccionar={setCategoriaSeleccionada}
+              onSeleccionar={seleccionarCategoria}
             />
 
-            <ProductList productos={productosFiltrados} />
+            <ProductList productos={productos} onVer={setDetalle} />
           </section>
+
+          <Recomendados productos={recomendados} onVer={setDetalle} />
         </>
       )}
 
       <Footer />
+
+      {modalAuth && (
+        <AuthModal
+          modoInicial={modalAuth}
+          onCerrar={() => setModalAuth(null)}
+          onExito={(u) => {
+            setUsuario(u)
+            setModalAuth(null)
+            if (u.es_admin) setVista('inventario')
+          }}
+        />
+      )}
+
+      {detalle && (
+        <ProductDetail
+          key={detalle.id}
+          producto={detalle}
+          onCerrar={() => setDetalle(null)}
+          onVer={setDetalle}
+        />
+      )}
     </div>
   )
 }

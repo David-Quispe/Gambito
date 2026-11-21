@@ -56,8 +56,13 @@ function Hero({ destacados }: HeroProps) {
               <a href="#catalogo">Ver catálogo ▶</a>
             </Button>
             <span className="font-display text-3xl text-peach">
-              S/ {juego.precio.toFixed(2)}
+              S/ {juego.precio_final.toFixed(2)}
             </span>
+            {juego.en_oferta && (
+              <span className="text-sm text-paper/60 line-through">
+                S/ {juego.precio.toFixed(2)}
+              </span>
+            )}
           </div>
 
           <div className="mt-2 flex items-center gap-3 text-xs">
