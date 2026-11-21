@@ -54,6 +54,7 @@ class IaTests(TestCase):
         self.assertEqual(r.json()['detail'], 'Sin clave.')
 
     def test_sin_clave_no_intenta_conectarse(self):
+        ia._modelo_que_funciona = None
         with patch.dict(os.environ, {'GEMINI_API_KEY': ''}):
             with self.assertRaises(ia.ErrorIA):
                 ia.generar('s', [{'rol': 'usuario', 'texto': 'hola'}])
@@ -77,3 +78,50 @@ class IaTests(TestCase):
     def test_jugada_ia_ilegal_se_rechaza(self, _):
         datos = {'juego': 'ajedrez', 'posicion': 'fen', 'legales': ['e7e5', 'd7d5']}
         self.assertEqual(self.c.post('/api/ia/jugada/', datos, format='json').status_code, 502)
+
+
+def _http(codigo, mensaje='x'):
+    import io
+    import urllib.error
+
+    return urllib.error.HTTPError('u', codigo, 'e', {}, io.BytesIO(('{"error":{"message":"%s"}}' % mensaje).encode()))
+
+
+RESPUESTA_OK = {'candidates': [{'content': {'parts': [{'text': 'Hola'}]}}]}
+
+
+class ModelosTests(TestCase):
+    def setUp(self):
+        ia._modelo_que_funciona = None
+
+    def test_prueba_el_siguiente_modelo_si_uno_da_404(self):
+        with patch('catalogo.ia._enviar', side_effect=[_http(404), _http(404), RESPUESTA_OK]) as env:
+            self.assertEqual(ia.generar('s', [{'rol': 'usuario', 'texto': 'h'}]), 'Hola')
+        usados = [c.args[0] for c in env.call_args_list]
+        self.assertEqual(usados, ia.MODELOS[:3])
+        self.assertEqual(ia._modelo_que_funciona, ia.MODELOS[2])
+
+    def test_recuerda_el_modelo_que_funciono(self):
+        ia._modelo_que_funciona = 'gemini-3.5-flash'
+        with patch('catalogo.ia._enviar', return_value=RESPUESTA_OK) as env:
+            ia.generar('s', [{'rol': 'usuario', 'texto': 'h'}])
+        self.assertEqual(env.call_args.args[0], 'gemini-3.5-flash')
+
+    def test_si_todos_dan_404_explica_el_motivo(self):
+        with patch('catalogo.ia._enviar', side_effect=lambda *a: (_ for _ in ()).throw(_http(404, 'modelo retirado'))):
+            with self.assertRaises(ia.ErrorIA) as cm:
+                ia.generar('s', [{'rol': 'usuario', 'texto': 'h'}])
+        self.assertIn('404', str(cm.exception))
+        self.assertIn('modelo retirado', str(cm.exception))
+
+    def test_error_de_clave_muestra_el_mensaje_de_google(self):
+        with patch('catalogo.ia._enviar', side_effect=_http(401, 'clave invalida')):
+            with self.assertRaises(ia.ErrorIA) as cm:
+                ia.generar('s', [{'rol': 'usuario', 'texto': 'h'}])
+        self.assertIn('clave invalida', str(cm.exception))
+
+    def test_limite_de_uso(self):
+        with patch('catalogo.ia._enviar', side_effect=_http(429)):
+            with self.assertRaises(ia.ErrorIA) as cm:
+                ia.generar('s', [{'rol': 'usuario', 'texto': 'h'}])
+        self.assertIn('límite', str(cm.exception))
