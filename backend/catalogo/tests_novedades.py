@@ -91,3 +91,19 @@ class NovedadesTests(TestCase):
         call_command('cargar_novedades')
         call_command('cargar_novedades')
         self.assertEqual(Novedad.objects.count(), 4)
+
+    def test_trae_la_imagen_del_juego_vinculado(self):
+        from .models import Categoria, Producto
+
+        juego = Producto.objects.create(
+            nombre='Azul', descripcion='d', precio=50, stock=3, categoria=Categoria.objects.create(nombre='Familiar'),
+            imagen='/juegos/azul.svg',
+        )
+        self.sorteo.producto = juego
+        self.sorteo.save()
+        datos = APIClient().get('/api/novedades/').json()
+        sorteo = next(n for n in datos if n['id'] == self.sorteo.id)
+        self.assertEqual(sorteo['producto_imagen'], '/juegos/azul.svg')
+        self.assertEqual(sorteo['producto_nombre'], 'Azul')
+        torneo = next(n for n in datos if n['id'] == self.torneo.id)
+        self.assertIsNone(torneo['producto_imagen'])

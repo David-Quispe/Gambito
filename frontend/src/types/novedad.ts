@@ -13,6 +13,7 @@ export interface Novedad {
   cupos_restantes: number | null
   producto: number | null
   producto_nombre: string | null
+  producto_imagen: string | null
   participantes: number
   participo: boolean
   cerrada: boolean

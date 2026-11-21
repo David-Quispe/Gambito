@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import SectionTitle from '@/components/SectionTitle'
+import { usarRespaldo } from '@/lib/imagen'
 import { obtenerNovedades, participarEn, salirDe } from '@/services/api'
 import type { Novedad, TipoNovedad } from '@/types/novedad'
 import type { Usuario } from '@/types/producto'
@@ -15,6 +16,37 @@ const colorTipo: Record<TipoNovedad, string> = {
   torneo: 'bg-ink text-paper',
   sorteo: 'bg-hot text-white',
   nuevo: 'bg-emerald-700 text-white',
+}
+
+const simbolo: Record<TipoNovedad, string> = { torneo: '♞', sorteo: '🎁', nuevo: '★' }
+
+// Imagen del juego vinculado (premio del sorteo, juego del torneo o juego nuevo).
+// Si la novedad no tiene juego, se muestra un bloque decorativo del color de su tipo.
+function PortadaNovedad({ novedad }: { novedad: Novedad }) {
+  if (!novedad.producto_imagen) {
+    return (
+      <div className={`flex h-40 items-center justify-center text-6xl opacity-90 ${colorTipo[novedad.tipo]}`} aria-hidden>
+        {simbolo[novedad.tipo]}
+      </div>
+    )
+  }
+  return (
+    <div className="relative flex h-48 items-center justify-center bg-gradient-to-b from-ink/10 to-ink/0 p-3">
+      <img
+        src={novedad.producto_imagen}
+        alt={novedad.producto_nombre ?? novedad.titulo}
+        loading="lazy"
+        onError={(e) => usarRespaldo(e, novedad.producto_nombre ?? novedad.titulo)}
+        className="max-h-full max-w-full object-contain drop-shadow-[0_12px_14px_rgba(0,0,0,0.4)]"
+      />
+      {novedad.producto_nombre && (
+        <span className="absolute bottom-2 left-2 bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-paper">
+          {novedad.tipo === 'sorteo' ? 'Premio: ' : ''}
+          {novedad.producto_nombre}
+        </span>
+      )}
+    </div>
+  )
 }
 
 interface NovedadesProps {
@@ -110,6 +142,7 @@ function Novedades({ usuario, onIngresar, onVolver, onVerCatalogo }: NovedadesPr
               <span>{n.tipo_nombre}</span>
               {n.tipo !== 'nuevo' && <span>{n.cerrada ? 'Cerrado' : 'Abierto'}</span>}
             </div>
+            <PortadaNovedad novedad={n} />
             <div className="flex flex-1 flex-col gap-3 p-4">
               <h3 className="font-serif text-2xl font-bold uppercase leading-tight">{n.titulo}</h3>
               <p className="text-sm">{n.resumen}</p>

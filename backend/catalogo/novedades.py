@@ -28,12 +28,13 @@ class NovedadSerializer(serializers.ModelSerializer):
     cupos_restantes = serializers.SerializerMethodField()
     ganador_nombre = serializers.SerializerMethodField()
     producto_nombre = serializers.CharField(source='producto.nombre', default=None, read_only=True)
+    producto_imagen = serializers.SerializerMethodField()
 
     class Meta:
         model = Novedad
         fields = [
             'id', 'tipo', 'tipo_nombre', 'titulo', 'resumen', 'detalle', 'fecha', 'lugar', 'cupos',
-            'cupos_restantes', 'producto', 'producto_nombre', 'participantes', 'participo', 'cerrada',
+            'cupos_restantes', 'producto', 'producto_nombre', 'producto_imagen', 'participantes', 'participo', 'cerrada',
             'ganador_nombre',
         ]
 
@@ -46,6 +47,11 @@ class NovedadSerializer(serializers.ModelSerializer):
     def get_participo(self, obj):
         usuario = self.context['request'].user
         return bool(usuario.is_authenticated and obj.participaciones.filter(usuario=usuario).exists())
+
+    def get_producto_imagen(self, obj):
+        if obj.producto is None:
+            return None
+        return obj.producto.imagen or f'/tipos/{obj.producto.tipo}.svg'
 
     def get_cerrada(self, obj):
         return esta_cerrada(obj, self._inscritos(obj))
