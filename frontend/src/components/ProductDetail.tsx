@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import BotonAgregar from '@/components/BotonAgregar'
 import BotonDeseo from '@/components/BotonDeseo'
 import InfoJuego from '@/components/InfoJuego'
+import JugarContraBot from '@/components/JugarContraBot'
 import MiniProducto from '@/components/MiniProducto'
 import Precio from '@/components/Precio'
 import StatBadge from '@/components/StatBadge'
@@ -134,6 +135,9 @@ function ProductDetail({ producto, onCerrar, onVer }: ProductDetailProps) {
                   className="h-10 px-6"
                   style={{ background: tema.acento, color: tema.acentoTexto }}
                 />
+              </div>
+              <div>
+                <JugarContraBot nombre={producto.nombre} style={{ color: tema.titulo }} />
               </div>
             </div>
           </div>

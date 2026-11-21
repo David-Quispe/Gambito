@@ -52,3 +52,15 @@ class InfoAmpliadaTests(TestCase):
             self.assertEqual(id_de_youtube(enlace), esperado, enlace)
         self.assertEqual(id_de_youtube(''), '')
         self.assertEqual(id_de_youtube('no es un enlace'), '')
+
+
+class AgregarDamasTests(TestCase):
+    def test_crea_damas_una_sola_vez(self):
+        from django.core.management import call_command
+
+        call_command('agregar_damas')
+        call_command('agregar_damas')
+        self.assertEqual(Producto.objects.filter(nombre='Damas').count(), 1)
+        damas = Producto.objects.get(nombre='Damas')
+        self.assertEqual(damas.tipo, 'juego')
+        self.assertEqual(damas.categoria.nombre, 'Clásicos')
